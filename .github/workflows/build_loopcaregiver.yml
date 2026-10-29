@@ -149,7 +149,7 @@ jobs:
           bundle install
 
       - name: Sync clock
-        run: sudo sntp -sS ://windows.com
+        run: sudo sntp -sS windows.com
 
       - name: Fastlane Build & Archive
         run: bundle exec fastlane caregiver_build
