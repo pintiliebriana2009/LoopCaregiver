@@ -62,7 +62,7 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Sync upstream changes
-        if: steps.workflow-permission.outputs.has_permission == 'true' && vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit'
+        if: steps.workflow-permission.outputs.has_permission == 'true' && vars.SCHEDULED_SYNC != 'false' && github.repository_owner != 'LoopKit' && github.event_name == 'schedule'
         id: sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.2
         with:
@@ -126,8 +126,15 @@ jobs:
         (vars.SCHEDULED_BUILD != 'false' && needs.check_status.outputs.IS_SECOND_IN_MONTH == 'true') ||
         (vars.SCHEDULED_SYNC != 'false' && needs.check_status.outputs.NEW_COMMITS == 'true' )
     steps:
-      - name: Select Xcode version
-        run: "sudo xcode-select --switch /Applications/Xcode_16.1.app/Contents/Developer"
+      - name: Select Xcode version and ensure iOS Platform is installed
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_16.1.app/Contents/Developer
+          sudo xcodebuild -runFirstLaunch
+          if ! xcodebuild -showsdks | grep -q "iphoneos"; then
+            xcodebuild -downloadPlatform iOS
+          else
+            xcodebuild -downloadPlatform iOS || true
+          fi
 
       - name: Checkout Repo for building
         uses: actions/checkout@v5
